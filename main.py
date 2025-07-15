@@ -5,13 +5,11 @@ import time
 # ✅ Your bot token
 TOKEN = '8084011114:AAGqCKTt-3HibbZU6ttBAg1PK9Xb3ZJHw7I'
 
-# ✅ Public channel username
-CHANNEL_USERNAME = '@gold_dataaaa'
+# ✅ Public channel username in quotes
+CHANNEL_USERNAME = "@gold_dataaaa"
 
-# ✅ Create the bot instance
 bot = telebot.TeleBot(TOKEN)
 
-# ✅ Function to get gold price from CoinGecko API
 def get_gold_price():
     try:
         url = "https://api.coingecko.com/api/v3/simple/price?ids=tether-gold&vs_currencies=usd"
@@ -20,16 +18,15 @@ def get_gold_price():
         gold_price = data['tether-gold']['usd']
         return gold_price
     except Exception as e:
-        print("Error getting price:", e)
+        print("Error getting gold price:", e)
         return "error"
 
-# ✅ Main loop - send gold price every 30 minutes
 while True:
     price = get_gold_price()
     if price != "error":
         message = f"💰 Gold Price Update:\n\n1 oz = ${price} USD"
-        bot.send_message(@gold_dataaaa, message)
+        bot.send_message(CHANNEL_USERNAME, message)
     else:
-        bot.send_message(@gold_dataaaa, "❌ Couldn't fetch gold price.")
+        bot.send_message(CHANNEL_USERNAME, "❌ Couldn't fetch gold price.")
 
-    time.sleep(1800)  # Wait 1800 seconds (30 minutes)
+    time.sleep(1800)  # Wait 30 minutes
