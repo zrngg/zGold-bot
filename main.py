@@ -29,4 +29,4 @@ while True:
     else:
         bot.send_message(CHANNEL_USERNAME, "❌ Couldn't fetch gold price.")
 
-    time.sleep(1800)  # Wait 30 minutes
+    time.sleep(120)  # Wait 30 minutes
