@@ -2,8 +2,11 @@ import requests
 import telebot
 import time
 
+# Your bot's token
 TOKEN = '8084011114:AAGqCKTt-3HibbZU6ttBAg1PK9Xb3ZJHw7I'
-CHAT_ID = '@gold_dataaaa'  # Change to your group chat ID (with minus)
+
+# ✅ Replace with your CHANNEL username, NOT the bot username
+CHANNEL_USERNAME = '@your_channel_username'  # e.g. '@goldupdateschannel'
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -17,11 +20,12 @@ def get_gold_price():
     except:
         return "error"
 
+# 🔁 Loop to send price every 30 minutes
 while True:
     price = get_gold_price()
     if price != "error":
-        bot.send_message(CHAT_ID, f"💰 Gold Price: ${price} per oz")
+        bot.send_message(CHANNEL_USERNAME, f"💰 Gold Price: ${price} per oz")
     else:
-        bot.send_message(CHAT_ID, "❌ Couldn't fetch gold price")
+        bot.send_message(CHANNEL_USERNAME, "❌ Couldn't fetch gold price")
 
-    time.sleep(1800)  # 30 mins
+    time.sleep(1800)  # Wait 30 minutes
