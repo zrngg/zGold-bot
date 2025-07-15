@@ -3,7 +3,7 @@ import telebot
 import time
 
 TOKEN = '8084011114:AAGqCKTt-3HibbZU6ttBAg1PK9Xb3ZJHw7I'
-CHAT_ID = '-1234567890'  # Change to your group chat ID (with minus)
+CHAT_ID = '@gold_dataaaa'  # Change to your group chat ID (with minus)
 
 bot = telebot.TeleBot(TOKEN)
 
