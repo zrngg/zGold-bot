@@ -89,7 +89,7 @@ def generate_message():
     gbp = f"{forex['GBP_to_USD'] * 100:.2f}" if forex and forex['GBP_to_USD'] else "N/A"
 
     tz = pytz.timezone("Etc/GMT-3")
-    now = datetime.now(tz).strftime("%d %B %Y | %H:%M")
+    now = datetime.now(tz).strftime("%d %B %Y | %I:%M %p")  # 12-hour format
 
     return (
         f"{now} (GMT+3)\n"
@@ -126,4 +126,4 @@ def send_message():
 if __name__ == "__main__":
     while True:
         send_message()
-        time.sleep(1800)  # 30 minutes
+        time.sleep(300)  # Refresh every 5 minutes
