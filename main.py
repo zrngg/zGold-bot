@@ -6,6 +6,7 @@ import pytz
 from requests.structures import CaseInsensitiveDict
 
 GOLDAPI_KEY = 'goldapi-ho4919md64h04o-io'  # Your GoldAPI.io key
+METALSDEV_API_KEY = 'MSUEAIPPKP8RQETRMSSD151TRMSSD'  # Your Metals.dev API key
 TOKEN = '8084011114:AAGqCKTt-3HibbZU6ttBAg1PK9Xb3ZJHw7I'
 CHANNEL_USERNAME = "@gold_dataaaa"
 
@@ -29,7 +30,7 @@ def get_gold_price():
         return 0
 
 def get_silver_price():
-    url = "https://api.metals.dev/v1/metal/spot?api_key=EFD2UIA0EDZSKOQKPHXC275QKPHXC&metal=silver&currency=USD"
+    url = f"https://api.metals.dev/v1/metal/spot?api_key={METALSDEV_API_KEY}&metal=silver&currency=USD"
     headers = CaseInsensitiveDict()
     headers["Accept"] = "application/json"
 
@@ -39,7 +40,11 @@ def get_silver_price():
             print(f"Metals.dev error {resp.status_code}: {resp.text}")
             return 0
         data = resp.json()
-        return float(data.get("price", 0))
+        price = data.get("rate", {}).get("price")
+        if price is None:
+            print("Silver price not found in response")
+            return 0
+        return float(price)
     except Exception as e:
         print("Exception fetching silver price:", e)
         return 0
@@ -96,4 +101,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
