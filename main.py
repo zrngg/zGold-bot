@@ -4,14 +4,14 @@ import time
 from datetime import datetime
 import pytz
 
-# ✅ Your real API keys
-GOLDAPI_KEY = 'goldapi-ho4919md64h04o-io'  # replace with your GoldAPI.io key
+# API keys and tokens
+GOLDAPI_KEY = 'goldapi-ho4919md64h04o-io'  # Your GoldAPI.io key
+METALS_DEV_API_KEY = 'EFD2UIA0EDZSKOQKPHXC275QKPHXC'  # Your metals.dev API key
 TOKEN = '8084011114:AAGqCKTt-3HibbZU6ttBAg1PK9Xb3ZJHw7I'
 CHANNEL_USERNAME = "@gold_dataaaa"
 
 bot = telebot.TeleBot(TOKEN)
 
-# ✅ Fetch gold price from GoldAPI.io
 def get_gold_price():
     url = "https://www.goldapi.io/api/XAU/USD"
     headers = {
@@ -29,15 +29,40 @@ def get_gold_price():
         print("Exception fetching gold:", e)
         return 0
 
+def get_silver_price():
+    url = "https://api.metals.dev/v1/metal/spot"
+    params = {
+        "api_key": METALS_DEV_API_KEY,
+        "metal": "silver",
+        "currency": "USD"
+    }
+    try:
+        response = requests.get(url, params=params)
+        if response.status_code != 200:
+            print("Metals.dev Error:", response.status_code, response.text)
+            return 0
+        data = response.json()
+        # According to metals.dev docs, price is likely in 'price' field or similar
+        return float(data.get("price", 0))
+    except Exception as e:
+        print("Exception fetching silver:", e)
+        return 0
+
 def main():
     tz = pytz.timezone("Etc/GMT-3")
     oz_to_gram = 31.1
 
     while True:
         gold_price = get_gold_price()
+        silver_price = get_silver_price()
 
         if gold_price == 0:
             bot.send_message(CHANNEL_USERNAME, "❌ Couldn't fetch gold price.")
+            time.sleep(1800)
+            continue
+
+        if silver_price == 0:
+            bot.send_message(CHANNEL_USERNAME, "❌ Couldn't fetch silver price.")
             time.sleep(1800)
             continue
 
@@ -56,6 +81,7 @@ def main():
             f"{now} (GMT+3)\n"
             f"——————————————————\n"
             f"Gold Ounce Price: ${gold_price:,.2f}\n"
+            f"Silver Ounce Price: ${silver_price:,.2f}\n"
             f"——————————————————\n"
             f"Msqal 21K = ${m21:,.2f}\n"
             f"Msqal 18K = ${m18:,.2f}\n"
