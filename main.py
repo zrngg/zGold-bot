@@ -12,7 +12,7 @@ bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
 RATES_API_URL = 'https://data-asg.goldprice.org/dbXRates/USD'
 
-def fetch_prices():
+def fetch_gold_prices():
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
     }
@@ -21,43 +21,55 @@ def fetch_prices():
         response.raise_for_status()
         data = response.json()
         
-        prices = {}
-        for item in data.get('items', []):
-            currency = item['curr']
-            gold_oz = item.get('xauPrice')
-            silver_oz = item.get('xagPrice')
+        items = data.get('items', [])
+        if not items:
+            return None
 
-            # Convert ounces to grams
-            OZ_TO_GRAM = 31.1035
-            gold_g = gold_oz / OZ_TO_GRAM if gold_oz else None
-            silver_g = silver_oz / OZ_TO_GRAM if silver_oz else None
+        # Usually only one item for USD
+        item = items[0]
 
-            prices[currency] = {
-                'gold_oz': round(gold_oz, 2) if gold_oz else None,
-                'gold_g': round(gold_g, 2) if gold_g else None,
-                'silver_oz': round(silver_oz, 2) if silver_oz else None,
-                'silver_g': round(silver_g, 2) if silver_g else None,
-            }
-        return prices
+        gold_ounce_price = item.get('xauPrice')  # gold ounce price
+
+        msqal_21k = item.get('msq21K')
+        msqal_18k = item.get('msq18K')
+        dubai_lira_7_2g = item.get('dubaies')
+
+        g995 = item.get('g995')  # price per gram of 995 purity gold
+
+        return {
+            'gold_ounce_price': gold_ounce_price,
+            'msqal_21k': msqal_21k,
+            'msqal_18k': msqal_18k,
+            'dubai_lira_7_2g': dubai_lira_7_2g,
+            'g995': g995,
+        }
 
     except Exception as e:
-        print(f"Error fetching prices: {e}")
+        print(f"Error fetching gold prices: {e}")
         return None
 
-def send_silver_kilo():
-    prices = fetch_prices()
-    if not prices or 'USD' not in prices:
-        bot.send_message(CHANNEL_USERNAME, "❌ Couldn't fetch silver price.")
-        print("❌ Couldn't fetch silver price.")
+def send_gold_prices():
+    prices = fetch_gold_prices()
+    if not prices:
+        bot.send_message(CHANNEL_USERNAME, "❌ Couldn't fetch gold prices.")
+        print("❌ Couldn't fetch gold prices.")
         return
 
-    silver_per_gram = prices['USD']['silver_g']
-    if not silver_per_gram:
-        bot.send_message(CHANNEL_USERNAME, "❌ Silver price data unavailable.")
-        print("❌ Silver price data unavailable.")
+    gold_ounce_price = prices['gold_ounce_price']
+    msqal_21k = prices['msqal_21k']
+    msqal_18k = prices['msqal_18k']
+    dubai_lira_7_2g = prices['dubai_lira_7_2g']
+    g995 = prices['g995']
+
+    if None in [gold_ounce_price, msqal_21k, msqal_18k, dubai_lira_7_2g, g995]:
+        bot.send_message(CHANNEL_USERNAME, "❌ Incomplete gold price data.")
+        print("❌ Incomplete gold price data.")
         return
 
-    silver_kilo = silver_per_gram * 1000
+    # Calculate 250g, 500g, 1kg 995 purity prices
+    price_250g = g995 * 250
+    price_500g = g995 * 500
+    price_1kg = g995 * 1000
 
     # Time in GMT+3
     tz = pytz.timezone("Etc/GMT-3")
@@ -65,16 +77,23 @@ def send_silver_kilo():
 
     message = (
         f"{now} (GMT+3)\n"
-        f"====================\n"
-        f"⚪ Silver Price\n"
-        f"1 Kilogram = ${silver_kilo:,.2f}\n"
-        f"===================="
+        "——————————————————\n"
+        f"Gold Ounce Price: ${gold_ounce_price:,.2f}\n"
+        "——————————————————\n"
+        f"Msqal 21K = ${msqal_21k:,.2f}\n"
+        f"Msqal 18K = ${msqal_18k:,.2f}\n"
+        f"Dubai Lira 7.2g = ${dubai_lira_7_2g:,.2f}\n"
+        "——————————————————\n"
+        f"250g 995 = ${price_250g:,.2f}\n"
+        f"500g 995 = ${price_500g:,.2f}\n"
+        f"1Kg 995 = ${price_1kg:,.2f}\n"
+        "—————————"
     )
 
     bot.send_message(CHANNEL_USERNAME, message)
-    print("✅ Silver price sent!")
+    print("✅ Gold prices sent!")
 
 if __name__ == "__main__":
     while True:
-        send_silver_kilo()
-        time.sleep(1800)  # 30 minutes
+        send_gold_prices()
+        time.sleep(1800)
