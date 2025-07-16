@@ -10,7 +10,7 @@ CHANNEL_USERNAME = "@gold_dataaaa"
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 RATES_API_URL = 'https://data-asg.goldprice.org/dbXRates/USD'
 
-def fetch_gold_price():
+def fetch_prices():
     headers = {'User-Agent': 'Mozilla/5.0'}
     try:
         response = requests.get(RATES_API_URL, headers=headers)
@@ -19,35 +19,45 @@ def fetch_gold_price():
         items = data.get('items', [])
         if not items:
             return None
-        return items[0].get('xauPrice')  # Gold ounce price
+        return items[0]
     except Exception as e:
-        print(f"Error fetching gold price: {e}")
+        print(f"Error fetching prices: {e}")
         return None
 
-def calculate_prices(gold_ounce_price):
-    if not gold_ounce_price:
+def calculate_prices(gold_ounce_price, silver_ounce_price):
+    if not gold_ounce_price or not silver_ounce_price:
         return None
 
-    gram_price = gold_ounce_price / 31.1  # Convert ounce price to per gram price
+    gram_gold_price = gold_ounce_price / 31.1
+    gram_silver_price = silver_ounce_price / 31.1
 
     prices = {
-        'Msqal 21K 875': gram_price * 0.875 * 5,
-        'Msqal 18K 875': gram_price * 0.75 * 5,
-        'Lira Dubai 22K 7.2g': gram_price * 0.916 * 7.2,
-        '250g 24K 995': gram_price * 0.995 * 250,
-        '500g 24K 995': gram_price * 0.995 * 500,
-        '1Kg 24K 995': gram_price * 0.995 * 1000,
+        'Msqal 21K 875': gram_gold_price * 0.875 * 5,
+        'Msqal 18K 875': gram_gold_price * 0.75 * 5,
+        'Lira Dubai 22K 7.2g': gram_gold_price * 0.916 * 7.2,
+        '250g 24K 995': gram_gold_price * 0.995 * 250,
+        '500g 24K 995': gram_gold_price * 0.995 * 500,
+        '1Kg 24K 995': gram_gold_price * 0.995 * 1000,
+        'Silver 1Kg': gram_silver_price * 1000,
     }
     return prices
 
-def send_gold_prices():
-    gold_ounce_price = fetch_gold_price()
-    if not gold_ounce_price:
-        bot.send_message(CHANNEL_USERNAME, "❌ Couldn't fetch gold ounce price.")
-        print("❌ Couldn't fetch gold ounce price.")
+def send_prices():
+    prices_data = fetch_prices()
+    if not prices_data:
+        bot.send_message(CHANNEL_USERNAME, "❌ Couldn't fetch prices.")
+        print("❌ Couldn't fetch prices.")
         return
 
-    prices = calculate_prices(gold_ounce_price)
+    gold_ounce_price = prices_data.get('xauPrice')
+    silver_ounce_price = prices_data.get('xagPrice')
+
+    if gold_ounce_price is None or silver_ounce_price is None:
+        bot.send_message(CHANNEL_USERNAME, "❌ Gold or silver ounce price not available.")
+        print("❌ Gold or silver ounce price not available.")
+        return
+
+    prices = calculate_prices(gold_ounce_price, silver_ounce_price)
     if not prices:
         bot.send_message(CHANNEL_USERNAME, "❌ Error calculating prices.")
         print("❌ Error calculating prices.")
@@ -69,13 +79,15 @@ def send_gold_prices():
         f"250g 995 = ${prices['250g 24K 995']:,.2f}\n"
         f"500g 995 = ${prices['500g 24K 995']:,.2f}\n"
         f"1Kg 995 = ${prices['1Kg 24K 995']:,.2f}\n"
+        "——————————————————\n"
+        f"Silver 1Kg = ${prices['Silver 1Kg']:,.2f}\n"
         "—————————"
     )
 
     bot.send_message(CHANNEL_USERNAME, message)
-    print("✅ Gold prices sent!")
+    print("✅ Gold and silver prices sent!")
 
 if __name__ == "__main__":
     while True:
-        send_gold_prices()
-        time.sleep(1800)  # every 30 minutes
+        send_prices()
+        time.sleep(1800)  # 30 minutes
