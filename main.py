@@ -1,103 +1,76 @@
 import requests
-import telebot
+import json
 import time
 from datetime import datetime
 import pytz
-from requests.structures import CaseInsensitiveDict
+import telebot
 
-GOLDAPI_KEY = 'goldapi-ho4919md64h04o-io'  # Your GoldAPI.io key
-METALSDEV_API_KEY = 'MSUEAIPPKP8RQETRMSSD151TRMSSD'  # Your Metals.dev API key
-TOKEN = '8084011114:AAGqCKTt-3HibbZU6ttBAg1PK9Xb3ZJHw7I'
-CHANNEL_USERNAME = "@gold_dataaaa"
+# 🔑 Set your credentials
+API_KEY = "60d2debf31ec6952e774e3ca53d863fd60d2debf"
+TELEGRAM_TOKEN = "8084011114:AAGqCKTt-3HibbZU6ttBAg1PK9Xb3ZJHw7I"
+CHANNEL_USERNAME = "@gold_dataaaa"  # Your channel username
 
-bot = telebot.TeleBot(TOKEN)
+bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
+# ✅ Get gold price from GoldPricez
 def get_gold_price():
-    url = "https://www.goldapi.io/api/XAU/USD"
-    headers = {
-        "x-access-token": GOLDAPI_KEY,
-        "Content-Type": "application/json"
-    }
     try:
+        url = "https://goldpricez.com/api/rates/currency/usd/measure/ounce"
+        headers = { "X-API-KEY": API_KEY }
         response = requests.get(url, headers=headers)
-        if response.status_code != 200:
-            print("GoldAPI Error:", response.status_code, response.text)
-            return 0
-        data = response.json()
-        return float(data.get("price", 0))
+        response.raise_for_status()
+        # Double JSON parse
+        parsed_string = response.json()
+        data = json.loads(parsed_string)
+        price = float(data.get("ounce_price_usd", 0))
+        return price
     except Exception as e:
-        print("Exception fetching gold:", e)
+        print("❌ Error fetching gold price:", e)
         return 0
 
-def get_silver_price():
-    url = f"https://api.metals.dev/v1/metal/spot?api_key={METALSDEV_API_KEY}&metal=silver&currency=USD"
-    headers = CaseInsensitiveDict()
-    headers["Accept"] = "application/json"
+# ✅ Send message to Telegram
+def send_gold_price():
+    price = get_gold_price()
+    if price == 0:
+        bot.send_message(CHANNEL_USERNAME, "❌ Couldn't fetch gold price.")
+        return
 
-    try:
-        resp = requests.get(url, headers=headers)
-        if resp.status_code != 200:
-            print(f"Metals.dev error {resp.status_code}: {resp.text}")
-            return 0
-        data = resp.json()
-        price = data.get("rate", {}).get("price")
-        if price is None:
-            print("Silver price not found in response")
-            return 0
-        return float(price)
-    except Exception as e:
-        print("Exception fetching silver price:", e)
-        return 0
-
-def main():
+    # Format timestamp (GMT+3)
     tz = pytz.timezone("Etc/GMT-3")
+    now = datetime.now(tz).strftime("%d %B %Y | %H:%M")
+
+    # Calculations
     oz_to_gram = 31.1
+    g999 = price / oz_to_gram
+    g995 = g999 * 0.995
+    m21 = g999 * 0.875 * 5
+    m18 = g999 * 0.750 * 5
+    lira_dubai = g999 * 0.916 * 7.2
+    g250 = g999 * 0.995 * 250
+    g500 = g999 * 0.995 * 500
+    g1000 = g999 * 0.995 * 1000
 
-    while True:
-        gold_price = get_gold_price()
-        silver_price = get_silver_price()
+    # Message
+    message = (
+        f"{now} (GMT+3)\n"
+        f"——————————————————\n"
+        f"Gold Ounce Price: ${price:,.2f}\n"
+        f"——————————————————\n"
+        f"Msqal 21K = ${m21:,.2f}\n"
+        f"Msqal 18K = ${m18:,.2f}\n"
+        f"Dubai Lira 7.2g = ${lira_dubai:,.2f}\n"
+        f"——————————————————\n"
+        f"250g 995 = ${g250:,.2f}\n"
+        f"500g 995 = ${g500:,.2f}\n"
+        f"1Kg 995 = ${g1000:,.2f}\n"
+        f"—————————"
+    )
 
-        if gold_price == 0:
-            bot.send_message(CHANNEL_USERNAME, "❌ Couldn't fetch gold price.")
-            time.sleep(1800)
-            continue
+    bot.send_message(CHANNEL_USERNAME, message)
+    print("✅ Message sent!")
 
-        if silver_price == 0:
-            bot.send_message(CHANNEL_USERNAME, "❌ Couldn't fetch silver price.")
-            time.sleep(1800)
-            continue
-
-        now = datetime.now(tz).strftime("%d %B %Y | %H:%M")
-
-        g999 = gold_price / oz_to_gram
-        g995 = g999 * 0.995
-        m21 = g999 * 0.875 * 5
-        m18 = g999 * 0.750 * 5
-        lira_dubai = g999 * 0.916 * 7.2
-        g250 = g999 * 0.995 * 250
-        g500 = g999 * 0.995 * 500
-        g1000 = g999 * 0.995 * 1000
-
-        message = (
-            f"{now} (GMT+3)\n"
-            f"——————————————————\n"
-            f"Gold Ounce Price: ${gold_price:,.2f}\n"
-            f"Silver Ounce Price: ${silver_price:,.2f}\n"
-            f"——————————————————\n"
-            f"Msqal 21K = ${m21:,.2f}\n"
-            f"Msqal 18K = ${m18:,.2f}\n"
-            f"Dubai Lira 7.2g = ${lira_dubai:,.2f}\n"
-            f"——————————————————\n"
-            f"250g 995 = ${g250:,.2f}\n"
-            f"500g 995 = ${g500:,.2f}\n"
-            f"1Kg 995 = ${g1000:,.2f}\n"
-            f"—————————"
-        )
-
-        bot.send_message(CHANNEL_USERNAME, message)
-        print(f"Sent message at {now}")
-
-        time.sleep(1800)  # Wait 30 minutes
-
+# 🔁 Loop every 30 mins
 if __name__ == "__main__":
-    main()
+    while True:
+        send_gold_price()
+        time.sleep(1800)  # 30 minutes
