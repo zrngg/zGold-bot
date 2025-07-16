@@ -13,27 +13,31 @@ CHANNEL_USERNAME = "@gold_dataaaa"
 
 bot = telebot.TeleBot(TOKEN)
 
-# Get gold price from Polygon
 def get_gold_price():
     try:
         url = f"https://api.polygon.io/v1/last/forex/XAU/USD?apiKey={POLYGON_API_KEY}"
         response = requests.get(url)
+        if response.status_code != 200:
+            print(f"Error: status code {response.status_code}")
+            print(f"Response content: {response.text}")
+            return 0
         data = response.json()
+        print(f"Polygon API response: {data}")  # Debug print
         return float(data["last"]["ask"])
-    except:
+    except Exception as e:
+        print(f"Exception in get_gold_price: {e}")
         return 0
 
-# Use metals.live for silver
 def get_silver_price():
     try:
         url = "https://api.metals.live/v1/spot"
         response = requests.get(url)
         data = response.json()[0]
         return float(data['silver'])
-    except:
+    except Exception as e:
+        print(f"Exception in get_silver_price: {e}")
         return 0
 
-# Main Loop
 while True:
     gold_price = get_gold_price()
     silver_price = get_silver_price()
@@ -43,11 +47,9 @@ while True:
         time.sleep(1800)
         continue
 
-    # Timezone
     tz = pytz.timezone("Etc/GMT-3")
     now = datetime.now(tz).strftime("%d %B %Y | %H:%M")
 
-    # Calculations
     oz_to_gram = 31.1
     g999 = gold_price / oz_to_gram
     g995 = g999 * 0.995
@@ -58,7 +60,6 @@ while True:
     g500 = g999 * 0.995 * 500
     g1000 = g999 * 0.995 * 1000
 
-    # Build message
     message = (
         f"{now} (GMT+3)\n"
         f"——————————————————\n"
@@ -69,11 +70,4 @@ while True:
         f"Msqal 18K = ${m18:,.2f}\n"
         f"Dubai Lira 7.2g = ${lira_dubai:,.2f}\n"
         f"——————————————————\n"
-        f"250g 995 = ${g250:,.2f}\n"
-        f"500g 995 = ${g500:,.2f}\n"
-        f"1Kg 995 = ${g1000:,.2f}\n"
-        f"—————————"
-    )
-
-    bot.send_message(CHANNEL_USERNAME, message)
-    time.sleep(1800)
+        f"250g 995 = ${g250:,.2
