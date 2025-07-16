@@ -12,15 +12,22 @@ bot = telebot.TeleBot(TOKEN)
 
 def get_gold_price():
     try:
-        url = f"https://api.polygon.io/v1/last/forex/XAU/USD?apiKey={POLYGON_API_KEY}"
+        url = f"https://api.polygon.io/v1/last/forex/XAUUSD?apiKey={POLYGON_API_KEY}"
         response = requests.get(url)
+        print(f"Status code: {response.status_code}")
+        print(f"Response: {response.text}")
         if response.status_code != 200:
-            print(f"Error: status code {response.status_code}")
-            print(f"Response content: {response.text}")
             return 0
         data = response.json()
-        print(f"Polygon API response: {data}")
-        return float(data["last"]["ask"])
+        # Polygon response structure changed sometimes, check carefully:
+        if "last" in data and "ask" in data["last"]:
+            return float(data["last"]["ask"])
+        elif "results" in data and len(data["results"]) > 0:
+            # fallback, just in case
+            return float(data["results"][0]["p"])
+        else:
+            print("Unexpected response structure:", data)
+            return 0
     except Exception as e:
         print(f"Exception in get_gold_price: {e}")
         return 0
