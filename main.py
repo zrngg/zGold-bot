@@ -4,13 +4,13 @@ import time
 from datetime import datetime
 import pytz
 
-# ✅ Your bot token and channel
+ # bot token 
 TOKEN = '8084011114:AAGqCKTt-3HibbZU6ttBAg1PK9Xb3ZJHw7I'
 CHANNEL_USERNAME = "@gold_dataaaa"
 
 bot = telebot.TeleBot(TOKEN)
 
-# ✅ Get gold price in USD
+# gold price in USD
 def get_gold_price():
     try:
         url = "https://api.coingecko.com/api/v3/simple/price?ids=tether-gold&vs_currencies=usd"
@@ -20,7 +20,7 @@ def get_gold_price():
     except:
         return 0
 
-# ✅ Get silver price in USD
+# silver price in USD
 def get_silver_price():
     try:
         url = "https://api.coingecko.com/api/v3/simple/price?ids=silver&vs_currencies=usd"
@@ -30,7 +30,7 @@ def get_silver_price():
     except:
         return 0
 
-# ✅ Main loop
+
 while True:
     gold_price = get_gold_price()
     silver_price = get_silver_price()
@@ -40,11 +40,11 @@ while True:
         time.sleep(1800)
         continue
 
-    # 🕒 Time (GMT+3)
+    #  Time (GMT+3)
     tz = pytz.timezone("Etc/GMT-3")
     now = datetime.now(tz).strftime("%d %B %Y | %H:%M")
 
-    # 📐 Calculations
+    # Hsabat
     oz_to_gram = 31.1
     gold_gram_999 = gold_price / oz_to_gram
     gold_gram_995 = gold_gram_999 * 0.995
@@ -56,9 +56,9 @@ while True:
     bar_1kg  = gold_gram_999 * 0.995 * 1000
     silver_1kg = silver_price / oz_to_gram * 1000 if silver_price > 0 else None
 
-    # 📨 Format message
+    #  Format message
     message = (
-        f"📅 {now} (GMT+3)\n"
+        f" {now} (GMT+3)\n"
         f"----------------------------------------\n\n"
         f"💰 Gold Price Oz: ${gold_price:,.2f}\n\n"
         f"1 Gram 24K 999   = ${gold_gram_999:,.2f}\n"
@@ -82,8 +82,8 @@ while True:
             f"🥈 Silver price unavailable"
         )
 
-    # 📤 Send message to Telegram channel
+    
     bot.send_message(CHANNEL_USERNAME, message)
 
-    # 💤 Wait 30 minutes
+    # Rpeate time Wait 30 minutes
     time.sleep(1800)
