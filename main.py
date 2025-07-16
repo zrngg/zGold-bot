@@ -10,34 +10,23 @@ CHANNEL_USERNAME = "@gold_dataaaa"
 
 bot = telebot.TeleBot(TOKEN)
 
-# Get gold price
-def get_gold_price():
+# Get gold & silver prices from Metals.live
+def get_prices():
     try:
-        url = "https://api.coingecko.com/api/v3/simple/price?ids=tether-gold&vs_currencies=usd"
+        url = "https://api.metals.live/v1/spot"
         response = requests.get(url)
-        data = response.json()
-        return float(data['tether-gold']['usd'])
+        data = response.json()[0]
+        return float(data['gold']), float(data['silver'])
     except:
-        return 0
+        return 0, 0
 
-# Get silver price
-def get_silver_price():
-    try:
-        url = "https://api.coingecko.com/api/v3/simple/price?ids=silver&vs_currencies=usd"
-        response = requests.get(url)
-        data = response.json()
-        return float(data['silver']['usd'])
-    except:
-        return 0
-
-# Main loop (every 30 minutes)
+# Main loop
 while True:
-    gold_price = get_gold_price()
-    silver_price = get_silver_price()
+    gold_price, silver_price = get_prices()
 
     if gold_price == 0:
         bot.send_message(CHANNEL_USERNAME, "❌ Couldn't fetch gold price.")
-        time.sleep(60)
+        time.sleep(1800)
         continue
 
     # Current time (GMT+3)
@@ -55,7 +44,7 @@ while True:
     g500 = g999 * 0.995 * 500
     g1000 = g999 * 0.995 * 1000
 
-    # Build the message
+    # Build message
     message = (
         f"{now} (GMT+3)\n"
         f"——————————————————\n"
@@ -76,5 +65,4 @@ while True:
     bot.send_message(CHANNEL_USERNAME, message)
 
     # Wait 30 minutes
-    time.sleep(60)
-
+    time.sleep(1800)
