@@ -37,7 +37,7 @@ while True:
 
     if gold_price == 0:
         bot.send_message(CHANNEL_USERNAME, "❌ Couldn't fetch gold price.")
-        time.sleep(1800)
+        time.sleep(60)
         continue
 
     # Current time (GMT+3)
@@ -76,5 +76,5 @@ while True:
     bot.send_message(CHANNEL_USERNAME, message)
 
     # Wait 30 minutes
-    time.sleep(1800)
+    time.sleep(60)
 
