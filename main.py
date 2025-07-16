@@ -4,10 +4,7 @@ import time
 from datetime import datetime
 import pytz
 
-# Your Polygon API key
 POLYGON_API_KEY = 'F9Y09QpilEOOtJvA3LUjCJVFBP3hiVuq'
-
-# Telegram bot token and channel
 TOKEN = '8084011114:AAGqCKTt-3HibbZU6ttBAg1PK9Xb3ZJHw7I'
 CHANNEL_USERNAME = "@gold_dataaaa"
 
@@ -22,7 +19,7 @@ def get_gold_price():
             print(f"Response content: {response.text}")
             return 0
         data = response.json()
-        print(f"Polygon API response: {data}")  # Debug print
+        print(f"Polygon API response: {data}")
         return float(data["last"]["ask"])
     except Exception as e:
         print(f"Exception in get_gold_price: {e}")
@@ -70,4 +67,11 @@ while True:
         f"Msqal 18K = ${m18:,.2f}\n"
         f"Dubai Lira 7.2g = ${lira_dubai:,.2f}\n"
         f"——————————————————\n"
-        f"250g 995 = ${g250:,.2
+        f"250g 995 = ${g250:,.2f}\n"
+        f"500g 995 = ${g500:,.2f}\n"
+        f"1Kg 995 = ${g1000:,.2f}\n"
+        f"—————————"
+    )
+
+    bot.send_message(CHANNEL_USERNAME, message)
+    time.sleep(1800)
