@@ -3,10 +3,9 @@ import telebot
 import time
 from datetime import datetime
 import pytz
+from requests.structures import CaseInsensitiveDict
 
-# API keys and tokens
 GOLDAPI_KEY = 'goldapi-ho4919md64h04o-io'  # Your GoldAPI.io key
-METALS_DEV_API_KEY = 'EFD2UIA0EDZSKOQKPHXC275QKPHXC'  # Your metals.dev API key
 TOKEN = '8084011114:AAGqCKTt-3HibbZU6ttBAg1PK9Xb3ZJHw7I'
 CHANNEL_USERNAME = "@gold_dataaaa"
 
@@ -30,22 +29,19 @@ def get_gold_price():
         return 0
 
 def get_silver_price():
-    url = "https://api.metals.dev/v1/metal/spot"
-    params = {
-        "api_key": METALS_DEV_API_KEY,
-        "metal": "silver",
-        "currency": "USD"
-    }
+    url = "https://api.metals.dev/v1/metal/spot?api_key=EFD2UIA0EDZSKOQKPHXC275QKPHXC&metal=silver&currency=USD"
+    headers = CaseInsensitiveDict()
+    headers["Accept"] = "application/json"
+
     try:
-        response = requests.get(url, params=params)
-        if response.status_code != 200:
-            print("Metals.dev Error:", response.status_code, response.text)
+        resp = requests.get(url, headers=headers)
+        if resp.status_code != 200:
+            print(f"Metals.dev error {resp.status_code}: {resp.text}")
             return 0
-        data = response.json()
-        # According to metals.dev docs, price is likely in 'price' field or similar
+        data = resp.json()
         return float(data.get("price", 0))
     except Exception as e:
-        print("Exception fetching silver:", e)
+        print("Exception fetching silver price:", e)
         return 0
 
 def main():
@@ -100,3 +96,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
