@@ -4,32 +4,46 @@ import time
 from datetime import datetime
 import pytz
 
+# Your Polygon API key
+POLYGON_API_KEY = 'F9Y09QpilEOOtJvA3LUjCJVFBP3hiVuq'
+
 # Telegram bot token and channel
 TOKEN = '8084011114:AAGqCKTt-3HibbZU6ttBAg1PK9Xb3ZJHw7I'
 CHANNEL_USERNAME = "@gold_dataaaa"
 
 bot = telebot.TeleBot(TOKEN)
 
-# Get gold & silver prices from Metals.live
-def get_prices():
+# Get gold price from Polygon
+def get_gold_price():
+    try:
+        url = f"https://api.polygon.io/v1/last/forex/XAU/USD?apiKey={POLYGON_API_KEY}"
+        response = requests.get(url)
+        data = response.json()
+        return float(data["last"]["ask"])
+    except:
+        return 0
+
+# Use metals.live for silver
+def get_silver_price():
     try:
         url = "https://api.metals.live/v1/spot"
         response = requests.get(url)
         data = response.json()[0]
-        return float(data['gold']), float(data['silver'])
+        return float(data['silver'])
     except:
-        return 0, 0
+        return 0
 
-# Main loop
+# Main Loop
 while True:
-    gold_price, silver_price = get_prices()
+    gold_price = get_gold_price()
+    silver_price = get_silver_price()
 
     if gold_price == 0:
         bot.send_message(CHANNEL_USERNAME, "❌ Couldn't fetch gold price.")
         time.sleep(1800)
         continue
 
-    # Current time (GMT+3)
+    # Timezone
     tz = pytz.timezone("Etc/GMT-3")
     now = datetime.now(tz).strftime("%d %B %Y | %H:%M")
 
@@ -61,8 +75,5 @@ while True:
         f"—————————"
     )
 
-    # Send to Telegram
     bot.send_message(CHANNEL_USERNAME, message)
-
-    # Wait 30 minutes
     time.sleep(1800)
