@@ -4,34 +4,29 @@ import time
 from datetime import datetime
 import pytz
 
-POLYGON_API_KEY = 'F9Y09QpilEOOtJvA3LUjCJVFBP3hiVuq'
+# ✅ Your real API keys
+NINJAS_API_KEY = 'WC/OwCltjWPfDUqcCJZV9Q==10Sn12y1EVPalh2T'
 TOKEN = '8084011114:AAGqCKTt-3HibbZU6ttBAg1PK9Xb3ZJHw7I'
 CHANNEL_USERNAME = "@gold_dataaaa"
 
 bot = telebot.TeleBot(TOKEN)
 
+# ✅ Fetch gold price from API-Ninjas
 def get_gold_price():
     try:
-        url = f"https://api.polygon.io/v1/last/forex/XAUUSD?apiKey={POLYGON_API_KEY}"
-        response = requests.get(url)
-        print(f"Status code: {response.status_code}")
-        print(f"Response: {response.text}")
+        url = "https://api.api-ninjas.com/v1/commodities?name=gold"
+        headers = { "X-Api-Key": NINJAS_API_KEY }
+        response = requests.get(url, headers=headers)
         if response.status_code != 200:
+            print("Gold Error:", response.status_code, response.text)
             return 0
         data = response.json()
-        # Polygon response structure changed sometimes, check carefully:
-        if "last" in data and "ask" in data["last"]:
-            return float(data["last"]["ask"])
-        elif "results" in data and len(data["results"]) > 0:
-            # fallback, just in case
-            return float(data["results"][0]["p"])
-        else:
-            print("Unexpected response structure:", data)
-            return 0
+        return float(data[0]['price'])
     except Exception as e:
-        print(f"Exception in get_gold_price: {e}")
+        print("Exception fetching gold:", e)
         return 0
 
+# ✅ Fetch silver from metals.live
 def get_silver_price():
     try:
         url = "https://api.metals.live/v1/spot"
@@ -39,9 +34,10 @@ def get_silver_price():
         data = response.json()[0]
         return float(data['silver'])
     except Exception as e:
-        print(f"Exception in get_silver_price: {e}")
+        print("Exception fetching silver:", e)
         return 0
 
+# ✅ Main loop: sends price every 30 minutes
 while True:
     gold_price = get_gold_price()
     silver_price = get_silver_price()
@@ -51,9 +47,11 @@ while True:
         time.sleep(1800)
         continue
 
+    # Format time (Iraq GMT+3)
     tz = pytz.timezone("Etc/GMT-3")
     now = datetime.now(tz).strftime("%d %B %Y | %H:%M")
 
+    # Calculations
     oz_to_gram = 31.1
     g999 = gold_price / oz_to_gram
     g995 = g999 * 0.995
@@ -64,6 +62,7 @@ while True:
     g500 = g999 * 0.995 * 500
     g1000 = g999 * 0.995 * 1000
 
+    # Message
     message = (
         f"{now} (GMT+3)\n"
         f"——————————————————\n"
@@ -80,5 +79,8 @@ while True:
         f"—————————"
     )
 
+    # ✅ Send to Telegram channel
     bot.send_message(CHANNEL_USERNAME, message)
+
+    # Wait 30 minutes
     time.sleep(1800)
