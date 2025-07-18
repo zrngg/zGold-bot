@@ -4,12 +4,13 @@ import pytz
 import telebot
 import time
 
-# Credentials
+# Configuration
 TELEGRAM_TOKEN = "8084011114:AAGqCKTt-3HibbZU6ttBAg1PK9Xb3ZJHw7I"
 CHANNEL_USERNAME = "@gold_dataaaa"
+IMAGE_URL = "https://postimg.cc/cK2YKyZb"  # Your gold price image
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
-# APIs
+# API Endpoints
 GOLD_SILVER_API = 'https://data-asg.goldprice.org/dbXRates/USD'
 CRYPTO_API = "https://api.coingecko.com/api/v3/simple/price"
 FOREX_API = "https://open.er-api.com/v6/latest/USD"
@@ -26,7 +27,7 @@ def fetch_gold_silver_prices():
         return None
 
 def calculate_gold_prices(gold_oz, silver_oz):
-    gold_g = gold_oz / 31.1
+    gold_g = gold_oz / 31.1  # Convert oz to grams
     silver_g = silver_oz / 31.1
     return {
         'Msqal 21K': gold_g * 0.875 * 5,
@@ -81,6 +82,7 @@ def generate_message():
     crypto = fetch_crypto_prices()
     forex = fetch_forex_rates()
 
+    # Format prices
     btc = f"${crypto['BTC']:,.2f}" if crypto and crypto['BTC'] else "N/A"
     eth = f"${crypto['ETH']:,.2f}" if crypto and crypto['ETH'] else "N/A"
     xrp = f"${crypto['XRP']:,.4f}" if crypto and crypto['XRP'] else "N/A"
@@ -88,6 +90,7 @@ def generate_message():
     eur = f"{forex['EUR_to_USD'] * 100:.2f}" if forex and forex['EUR_to_USD'] else "N/A"
     gbp = f"{forex['GBP_to_USD'] * 100:.2f}" if forex and forex['GBP_to_USD'] else "N/A"
 
+    # Format timestamp
     tz = pytz.timezone("Etc/GMT-3")
     now = datetime.now(tz).strftime("%d %B %Y | %I:%M %p")  # 12-hour format
 
@@ -116,15 +119,47 @@ def generate_message():
         f"100 GBP in USD: {gbp}\n"
         "────────────────\n"
         "تێبینی ئەونرخانە نرخی بۆرسەن\n"
-        "[Suli Borsa Whatsapp](https://chat.whatsapp.com/KFrg9RiQ7yg879MVTQGWlF)"
+        "[Whatsapp Group](https://chat.whatsapp.com/KFrg9RiQ7yg879MVTQGWlF)"
     )
 
 def send_message():
     msg = generate_message()
-    bot.send_message(CHANNEL_USERNAME, msg, parse_mode='Markdown', disable_web_page_preview=True)
-    print("✅ Message sent to Telegram.")
+    
+    try:
+        # First send the image
+        bot.send_photo(CHANNEL_USERNAME, IMAGE_URL)
+        
+        # Then send the formatted message
+        bot.send_message(
+            CHANNEL_USERNAME,
+            msg,
+            parse_mode='Markdown',
+            disable_web_page_preview=True
+        )
+        print("✅ Image and message sent successfully.")
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        try:
+            # Fallback: send message only
+            bot.send_message(
+                CHANNEL_USERNAME,
+                msg,
+                parse_mode='Markdown',
+                disable_web_page_preview=True
+            )
+            print("✅ Sent text message only (fallback).")
+        except Exception as e:
+            print(f"❌ Failed to send fallback message: {e}")
 
 if __name__ == "__main__":
+    print("Bot started...")
     while True:
-        send_message()
-        time.sleep(300)  # Refresh every 5 minutes
+        try:
+            send_message()
+            time.sleep(300)  # 5 minute interval
+        except KeyboardInterrupt:
+            print("Bot stopped by user")
+            break
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            time.sleep(60)  # Wait 1 minute before retrying
