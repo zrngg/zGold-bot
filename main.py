@@ -116,6 +116,7 @@ def generate_message():
         f"100 GBP in USD: {gbp}\n"
         f"────────────────\n"
         f"تێبینی ئەونرخانە نرخی بۆرسەن\n"
+        f"بە سپۆنسەری پوری مچە\n"
         f"[Suli Borsa Whatsapp](https://chat.whatsapp.com/KFrg9RiQ7yg879MVTQGWlF)"
     )
 
