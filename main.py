@@ -22,7 +22,7 @@ def generate_message():
     tz = pytz.timezone("Etc/GMT-3")
     now = datetime.now(tz).strftime("%d %B %Y | %I:%M %p")  # 12-hour format
 
-    return (
+   return (
         f"{now} (GMT+3)\n"
         "────────────────\n"
         f"Gold Ounce Price: ${gold_oz:,.2f}\n"
@@ -49,3 +49,8 @@ def generate_message():
         "تێبینی ئەونرخانە نرخی بۆرسەن\n"
         "[Whatsapp Group](https://chat.whatsapp.com/KFrg9RiQ7yg879MVTQGWlF)"
     )
+
+def send_message():
+    msg = generate_message()
+    bot.send_message(CHANNEL_USERNAME, msg, parse_mode='Markdown', disable_web_page_preview=True)
+    print("✅ Message sent to Telegram.")
