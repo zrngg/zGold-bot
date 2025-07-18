@@ -4,13 +4,12 @@ import pytz
 import telebot
 import time
 
-# Configuration
+# Credentials
 TELEGRAM_TOKEN = "8084011114:AAGqCKTt-3HibbZU6ttBAg1PK9Xb3ZJHw7I"
 CHANNEL_USERNAME = "@gold_dataaaa"
-IMAGE_URL = "https://i.postimg.cc/cK2YKyZb/gold-price.jpg"  # Converted to direct image link
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
-# API Endpoints
+# APIs
 GOLD_SILVER_API = 'https://data-asg.goldprice.org/dbXRates/USD'
 CRYPTO_API = "https://api.coingecko.com/api/v3/simple/price"
 FOREX_API = "https://open.er-api.com/v6/latest/USD"
@@ -90,17 +89,17 @@ def generate_message():
     gbp = f"{forex['GBP_to_USD'] * 100:.2f}" if forex and forex['GBP_to_USD'] else "N/A"
 
     tz = pytz.timezone("Etc/GMT-3")
-    now = datetime.now(tz).strftime("%d %B %Y | %I:%M %p")
+    now = datetime.now(tz).strftime("%d %B %Y | %I:%M %p")  # 12-hour format
 
     return (
         f"{now} (GMT+3)\n"
-        "────────────────\n"
+        "——————————————————\n"
         f"Gold Ounce Price: ${gold_oz:,.2f}\n"
         f"Silver Ounce Price: ${silver_oz:,.2f}\n"
         f"Bitcoin Price: {btc}\n"
         f"Ethereum Price: {eth}\n"
         f"XRP Price: {xrp}\n"
-        "────────────────\n"
+        "——————————————————\n"
         "Gold: 🟡\n"
         f"Msqal 21K = ${prices['Msqal 21K']:,.2f}\n"
         f"Msqal 18K = ${prices['Msqal 18K']:,.2f}\n"
@@ -108,65 +107,30 @@ def generate_message():
         f"250g 995 = ${prices['250g 995']:,.2f}\n"
         f"500g 995 = ${prices['500g 995']:,.2f}\n"
         f"1Kg 995 = ${prices['1Kg 995']:,.2f}\n"
-        "────────────────\n"
+        "——————————————————\n"
         "Silver: ⚪\n"
         f"1Kg Price: ${prices['Silver 1Kg']:,.2f}\n"
-        "────────────────\n"
+        "——————————————————\n"
         "Forex: 💵\n"
         f"100 EUR in USD: {eur}\n"
         f"100 GBP in USD: {gbp}\n"
-        "────────────────\n"
-        "تێبینی ئەونرخانە نرخی بۆرسەن\n"
-        "[Whatsapp Group](https://chat.whatsapp.com/KFrg9RiQ7yg879MVTQGWlF)"
+        "——————————————————\n"
+        "تێبینی ئەونرخانە نرخی بۆرسەن"
     )
 
 def send_message():
     msg = generate_message()
-    
+    image_url = "https://i.imgur.com/NiKMpdF.jpeg"
+
     try:
-        # First try sending the image with caption
-        bot.send_photo(
-            CHANNEL_USERNAME, 
-            IMAGE_URL,
-            caption=msg[:1024],  # Telegram has 1024 character limit for captions
-            parse_mode='Markdown'
-        )
-        print("✅ Message with image sent successfully.")
-    except Exception as img_error:
-        print(f"❌ Image send failed: {img_error}")
-        try:
-            # Fallback 1: Send image and text separately
-            bot.send_photo(CHANNEL_USERNAME, IMAGE_URL)
-            bot.send_message(
-                CHANNEL_USERNAME,
-                msg,
-                parse_mode='Markdown',
-                disable_web_page_preview=True
-            )
-            print("✅ Sent image and text separately.")
-        except Exception as fallback_error:
-            print(f"❌ Fallback failed: {fallback_error}")
-            try:
-                # Final fallback: Text only
-                bot.send_message(
-                    CHANNEL_USERNAME,
-                    msg,
-                    parse_mode='Markdown',
-                    disable_web_page_preview=True
-                )
-                print("✅ Sent text message only.")
-            except Exception as final_error:
-                print(f"❌ Complete failure: {final_error}")
+        bot.send_photo(CHANNEL_USERNAME, image_url, caption=msg)
+        print("✅ Message with image sent to Telegram.")
+    except Exception as e:
+        print(f"⚠️ Failed to send image: {e}")
+        bot.send_message(CHANNEL_USERNAME, msg)
+        print("✅ Fallback: Message without image sent to Telegram.")
 
 if __name__ == "__main__":
-    print("🚀 Gold Price Bot Started")
     while True:
-        try:
-            send_message()
-            time.sleep(300)  # 5 minute interval
-        except KeyboardInterrupt:
-            print("🛑 Bot stopped by user")
-            break
-        except Exception as e:
-            print(f"⚠️ Unexpected error: {e}")
-            time.sleep(60)  # Wait 1 minute before retrying
+        send_message()
+        time.sleep(300)  # Refresh every 5 minutes
